@@ -35,7 +35,7 @@
 	cublasStatus_t status = (expression);                   							\
 	if (status != CUBLAS_STATUS_SUCCESS) {                  							\
 	  std::cerr << "Error in file " << __FILE__ << " on line " << __LINE__ << ": "     	\
-				<< _cudaGetErrorEnum(status) << std::endl;  							\
+				<< std::endl;  							\
 	  std::exit(EXIT_FAILURE);                              							\
 	}                                                       							\
 }
@@ -45,7 +45,7 @@
 	curandStatus_t status = (expression);                   							\
 	if (status != CURAND_STATUS_SUCCESS) {                  							\
 	  std::cerr << "Error in file " << __FILE__ << " on line " << __LINE__ << ": "     	\
-				<< _cudaGetErrorEnum(status) << std::endl;  							\
+				<< std::endl;  							\
 	  std::exit(EXIT_FAILURE);                              							\
 	}                                                       							\
 }
