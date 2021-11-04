@@ -117,8 +117,8 @@ int main(int argc, char *argv[]) {
 	int *f_train_labels, *f_test_labels;
 	int rows = 224, cols = 224, channels = 3;
 	int input_size = rows * cols * channels;
-	checkCudaErrors(cudaMallocHost(&f_train_images, num_train * input_size * sizeof(float)));
-	checkCudaErrors(cudaMallocHost(&f_train_labels, num_train * sizeof(int)));
+	cudaMallocHost(&f_train_images, num_train * input_size * sizeof(float));
+	cudaMallocHost(&f_train_labels, num_train * sizeof(int));
 	f_test_images = (float *)malloc(num_test * input_size * sizeof(float));
 	f_test_labels = (int *)malloc(num_test * sizeof(int));
 

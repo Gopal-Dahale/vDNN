@@ -12,8 +12,8 @@ Solver::Solver(NeuralNet *model, void *X_train, int *y_train, void *X_val, int *
 	this->num_train = num_train, this->num_val = num_val;
 	this->num_features = model->input_channels * model->input_h * model->input_w;
 
-	checkCudaErrors(cudaEventCreate(&start));
-	checkCudaErrors(cudaEventCreate(&stop));
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
 	
 
 }
@@ -116,7 +116,7 @@ float Solver::step(int start_X, int start_y, std::vector<float> &fwd_vdnn_lag, s
 	// 		}
 	// 	}
 	// }
-	checkCudaErrors(cudaDeviceSynchronize());
+	cudaDeviceSynchronize();
 	return temp_loss;
 
 }
@@ -131,13 +131,13 @@ void Solver::train(std::vector<float> &loss, std::vector<int> &val_acc) {
 			int start_sample = j * num_features * batch_size;
 
 			float milli = 0;
-			checkCudaErrors(cudaEventRecord(start, model->stream_compute));
+			cudaEventRecord(start, model->stream_compute);
 
 			float temp_loss = step(start_sample, j * batch_size);
 
-			checkCudaErrors(cudaEventRecord(stop, model->stream_compute));
-			checkCudaErrors(cudaEventSynchronize(stop));
-			checkCudaErrors(cudaEventElapsedTime(&milli, start, stop));
+			cudaEventRecord(stop, model->stream_compute);
+			cudaEventSynchronize(stop));
+			cudaEventElapsedTime(&milli, start, stop));
 			std::cout << "One forward, backward pass time(ms): " << milli << std::endl;
 			
 			loss.push_back(temp_loss);
@@ -186,15 +186,15 @@ void Solver::getTrainTime(std::vector<float> &loss, std::vector<float> &time, in
 		for (int j = 0; j < num_train_batches; j++) {
 			int start_sample = j * num_features * batch_size;
 
-			checkCudaErrors(cudaEventRecord(start));
+			cudaEventRecord(start);
 			float milli;
 
 			std::vector<float> cur_fwd_vdnn_lag, cur_bwd_vdnn_lag; 
 			float temp_loss = step(start_sample, j * batch_size, cur_fwd_vdnn_lag, cur_bwd_vdnn_lag);
 
-			checkCudaErrors(cudaEventRecord(stop));
-			checkCudaErrors(cudaEventSynchronize(stop));
-			checkCudaErrors(cudaEventElapsedTime(&milli, start, stop));
+			cudaEventRecord(stop);
+			cudaEventSynchronize(stop);
+			cudaEventElapsedTime(&milli, start, stop);
 			// std::cout << "One forward, backward pass time(ms): " << milli << std::endl;
 			
 			fwd_vdnn_lag.push_back(cur_fwd_vdnn_lag);

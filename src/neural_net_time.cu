@@ -27,7 +27,7 @@ void NeuralNet::getComputationTime(void *X, int *y, double learning_rate,
 			checkCNMEM(cnmemMalloc(&cur_workspace, cur_workspace_size, NULL));
 		}
 
-		checkCudaErrors(cudaEventRecord(start_compute, stream_compute));
+		cudaEventRecord(start_compute, stream_compute);
 		if (layer_type[i] == CONV) {
 			ConvLayerParams *cur_params = (ConvLayerParams *)params[i];
 
@@ -177,10 +177,10 @@ void NeuralNet::getComputationTime(void *X, int *y, double learning_rate,
 		}
 
 		// sync with stream_compute guaranteed
-		checkCudaErrors(cudaEventRecord(stop_compute, stream_compute));
-		checkCudaErrors(cudaEventSynchronize(stop_compute));
+		cudaEventRecord(stop_compute, stream_compute);
+		cudaEventSynchronize(stop_compute);
 		float compute_time = 0;
-		checkCudaErrors(cudaEventElapsedTime(&compute_time, start_compute, stop_compute));
+		cudaEventElapsedTime(&compute_time, start_compute, stop_compute);
 		
 		fwd_computation_time.push_back(compute_time);
 		
@@ -277,7 +277,7 @@ void NeuralNet::getComputationTime(void *X, int *y, double learning_rate,
 
 
 		if (!(i + 1 < num_layers && layer_type[i + 1] == SOFTMAX))
-			checkCudaErrors(cudaEventRecord(start_compute, stream_compute));
+			cudaEventRecord(start_compute, stream_compute);
 
 		if (layer_type[i] == CONV) {
 			ConvLayerParams *cur_params = (ConvLayerParams *)params[i];
@@ -470,10 +470,10 @@ void NeuralNet::getComputationTime(void *X, int *y, double learning_rate,
 		
 		// checkCudaErrors(cudaDeviceSynchronize());
 
-		checkCudaErrors(cudaEventRecord(stop_compute, stream_compute));
-		checkCudaErrors(cudaEventSynchronize(stop_compute));
+		cudaEventRecord(stop_compute, stream_compute);
+		cudaEventSynchronize(stop_compute);
 		float compute_time;
-		checkCudaErrors(cudaEventElapsedTime(&compute_time, start_compute, stop_compute));
+		cudaEventElapsedTime(&compute_time, start_compute, stop_compute);
 
 		bwd_computation_time.insert(bwd_computation_time.begin(), compute_time);
 
@@ -515,25 +515,25 @@ void NeuralNet::getTransferTime(void *X, int *y, double learning_rate, std::vect
 		void *host_data;
 
 		checkCNMEM(cnmemMalloc(&device_data, layer_input_size[i] * data_type_size, NULL));
-		checkCudaErrors(cudaMallocHost(&host_data, layer_input_size[i] * data_type_size));
+		cudaMallocHost(&host_data, layer_input_size[i] * data_type_size);
 
-		checkCudaErrors(cudaEventRecord(start_transfer, stream_memory));
+		cudaEventRecord(start_transfer, stream_memory);
 
-		checkCudaErrors(cudaMemcpyAsync(host_data, device_data, layer_input_size[i] * data_type_size, cudaMemcpyDeviceToHost, stream_memory));
+		cudaMemcpyAsync(host_data, device_data, layer_input_size[i] * data_type_size, cudaMemcpyDeviceToHost, stream_memory);
 
-		checkCudaErrors(cudaEventRecord(stop_transfer, stream_memory));
-		checkCudaErrors(cudaEventSynchronize(stop_transfer));
+		cudaEventRecord(stop_transfer, stream_memory);
+		cudaEventSynchronize(stop_transfer);
 		float transfer_time;
-		checkCudaErrors(cudaEventElapsedTime(&transfer_time, start_transfer, stop_transfer));
+		cudaEventElapsedTime(&transfer_time, start_transfer, stop_transfer);
 		fwd_transfer_time.push_back(transfer_time);
 
-		checkCudaErrors(cudaEventRecord(start_transfer, stream_memory));
+		cudaEventRecord(start_transfer, stream_memory);
 
-		checkCudaErrors(cudaMemcpyAsync(device_data, host_data, layer_input_size[i] * data_type_size, cudaMemcpyHostToDevice, stream_memory));
+		cudaMemcpyAsync(device_data, host_data, layer_input_size[i] * data_type_size, cudaMemcpyHostToDevice, stream_memory);
 
-		checkCudaErrors(cudaEventRecord(stop_transfer, stream_memory));
-		checkCudaErrors(cudaEventSynchronize(stop_transfer));
-		checkCudaErrors(cudaEventElapsedTime(&transfer_time, start_transfer, stop_transfer));
+		cudaEventRecord(stop_transfer, stream_memory);
+		cudaEventSynchronize(stop_transfer);
+		cudaEventElapsedTime(&transfer_time, start_transfer, stop_transfer);
 		bwd_transfer_time.push_back(transfer_time);
 	}
 }

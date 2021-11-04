@@ -50,7 +50,7 @@ float NeuralNet::computeLoss() {
 		else if (data_type == CUDNN_DATA_DOUBLE)
 			computeSoftmaxLoss<double><<<ceil(1.0 * batch_size / BW), BW>>>((double *)layer_input[num_layers], this->y, loss, batch_size, num_classes, softmax_eps);
 	}
-	checkCudaErrors(cudaMemcpy(h_loss, loss, batch_size * sizeof(float), cudaMemcpyDeviceToHost));
+	cudaMemcpy(h_loss, loss, batch_size * sizeof(float), cudaMemcpyDeviceToHost);
 	float total_loss = 0.0;
 	for (int i = 0; i < batch_size; i++)
 		total_loss += h_loss[i];
@@ -63,7 +63,7 @@ void NeuralNet::compareOutputCorrect(int *correct_count, int *y) {
 	if (data_type == CUDNN_DATA_FLOAT) {
 		float *typecast_O = (float *)layer_input[num_layers - 1];
 		inferClass<float><<<ceil(1.0 * batch_size / BW), BW>>>(typecast_O, pred_y, batch_size, num_classes);
-		checkCudaErrors(cudaMemcpy(h_pred_y, pred_y, batch_size * sizeof(int), cudaMemcpyDeviceToHost));
+		cudaMemcpy(h_pred_y, pred_y, batch_size * sizeof(int), cudaMemcpyDeviceToHost);
 		for (int i = 0; i < batch_size; i++) {
 			if (h_pred_y[i] == y[i])
 				*correct_count = *correct_count + 1;
@@ -72,7 +72,7 @@ void NeuralNet::compareOutputCorrect(int *correct_count, int *y) {
 	else if (data_type == CUDNN_DATA_DOUBLE) {
 		double *typecast_O = (double *)layer_input[num_layers - 1];
 		inferClass<double><<<ceil(1.0 * batch_size / BW), BW>>>(typecast_O, pred_y, batch_size, num_classes);
-		checkCudaErrors(cudaMemcpy(h_pred_y, pred_y, batch_size * sizeof(int), cudaMemcpyDeviceToHost));
+		cudaMemcpy(h_pred_y, pred_y, batch_size * sizeof(int), cudaMemcpyDeviceToHost);
 		for (int i = 0; i < batch_size; i++) {
 			if (h_pred_y[i] == y[i])
 				*correct_count = *correct_count + 1;
@@ -88,8 +88,8 @@ NeuralNet::NeuralNet(std::vector<LayerSpecifier> &layers, DataType data_type, in
 						UpdateRule update_rule) {
 	
 	// ---------------------- vDNN start ----------------------
-	checkCudaErrors(cudaStreamCreate(&stream_compute));
-	checkCudaErrors(cudaStreamCreate(&stream_memory));
+	cudaStreamCreate(&stream_compute);
+	cudaStreamCreate(&stream_memory);
 	this->vdnn_type = vdnn_type;
 	this->vdnn_conv_algo = vdnn_conv_algo;
 	// ---------------------- vDNN end ------------------------
@@ -104,7 +104,7 @@ NeuralNet::NeuralNet(std::vector<LayerSpecifier> &layers, DataType data_type, in
 	checkCURAND(curandCreateGenerator(&curand_gen, CURAND_RNG_PSEUDO_DEFAULT));
 	checkCURAND(curandSetStream(curand_gen, stream_compute));
 
-	checkCudaErrors(cudaMemGetInfo(&free_bytes, &total_bytes));
+	cudaMemGetInfo(&free_bytes, &total_bytes);
 	init_free_bytes = free_bytes;
 	std::cout << "Free bytes at start: " << free_bytes << std::endl;
 
@@ -215,7 +215,7 @@ NeuralNet::NeuralNet(std::vector<LayerSpecifier> &layers, DataType data_type, in
 	prefetched = (bool *)malloc(num_layers * sizeof(bool));
 
 	// ---------------------- vDNN end ------------------------
-	checkCudaErrors(cudaMemGetInfo(&free_bytes, &total_bytes));
+	cudaMemGetInfo(&free_bytes, &total_bytes);
 	std::cout << "Free bytes just before allocate space: " << free_bytes << std::endl;
 	// allocate space for parameters
 	// Exception BatchNorm - looks like it will take lots of space if only FC layers - space taken = size of one input
@@ -312,22 +312,22 @@ NeuralNet::NeuralNet(std::vector<LayerSpecifier> &layers, DataType data_type, in
 		layer_input_size[i] = input_size;
 		// ---------------------- vDNN end ------------------------
 	}
-	checkCudaErrors(cudaDeviceSynchronize());
-	checkCudaErrors(cudaMemGetInfo(&free_bytes, &total_bytes));
+	cudaDeviceSynchronize();
+	cudaMemGetInfo(&free_bytes, &total_bytes);
 	std::cout << "Free bytes just after allocate space: " << free_bytes << std::endl;
 	// very small - could be allocated initially itself
-	checkCudaErrors(cudaMalloc((void **)&y, batch_size * sizeof(int)));
-	checkCudaErrors(cudaMalloc((void **)&pred_y, batch_size * sizeof(int)));
-	checkCudaErrors(cudaMalloc((void **)&loss, batch_size * sizeof(float)));
-	checkCudaErrors(cudaMalloc(&one_vec, batch_size * data_type_size));
+	cudaMalloc((void **)&y, batch_size * sizeof(int));
+	cudaMalloc((void **)&pred_y, batch_size * sizeof(int));
+	cudaMalloc((void **)&loss, batch_size * sizeof(float));
+	cudaMalloc(&one_vec, batch_size * data_type_size);
 
 	if (this->data_type == CUDNN_DATA_FLOAT)
 		fillValue<float><<<ceil(1.0 * batch_size / BW), BW>>>((float *)one_vec, batch_size, 1);
 	else
 		fillValue<double><<<ceil(1.0 * batch_size / BW), BW>>>((double *)one_vec, batch_size, 1);
 	
-	checkCudaErrors(cudaMallocHost((void **)&h_loss, batch_size * sizeof(float)));
-	checkCudaErrors(cudaMallocHost((void **)&h_pred_y, batch_size * sizeof(int)));
+	cudaMallocHost((void **)&h_loss, batch_size * sizeof(float));
+	cudaMallocHost((void **)&h_pred_y, batch_size * sizeof(int));
 	
 	// do not allocate workspace initially
 	// allocate space for workspace and also keep track of algo
@@ -343,8 +343,8 @@ NeuralNet::NeuralNet(std::vector<LayerSpecifier> &layers, DataType data_type, in
 
 	// checkCudaErrors(cudaMalloc(&workspace, workspace_size));
 	// free_bytes = free_bytes - workspace_size;
-	checkCudaErrors(cudaDeviceSynchronize());
-	checkCudaErrors(cudaMemGetInfo(&free_bytes, &total_bytes));
+	cudaDeviceSynchronize();
+	cudaMemGetInfo(&free_bytes, &total_bytes);
 
 	// leave 600 MB and use the rest
 	std::cout << "Free bytes: " << free_bytes << std::endl;
@@ -387,12 +387,12 @@ NeuralNet::NeuralNet(std::vector<LayerSpecifier> &layers, DataType data_type, in
 	for (int i = 0; i < num_layers; i++) {
 		// allocate pinned memory in host
 		if (to_offload[i])
-			checkCudaErrors(cudaMallocHost(&h_layer_input[i], layer_input_size[i] * data_type_size));
+			cudaMallocHost(&h_layer_input[i], layer_input_size[i] * data_type_size);
 	}
 	// ---------------------- vDNN end ------------------------
-	checkCudaErrors(cudaDeviceSynchronize());
+	cudaDeviceSynchronize();
 	size_t temp_free_bytes;
-	checkCudaErrors(cudaMemGetInfo(&temp_free_bytes, &total_bytes));
+	cudaMemGetInfo(&temp_free_bytes, &total_bytes);
 	std::cout << "Free bytes just before end of NeuralNet: " << temp_free_bytes << std::endl;
 	// {
 	// 	int n;
@@ -401,11 +401,11 @@ NeuralNet::NeuralNet(std::vector<LayerSpecifier> &layers, DataType data_type, in
 	// }
 
 	// data of time
-	checkCudaErrors(cudaEventCreate(&start_compute));
-	checkCudaErrors(cudaEventCreate(&stop_compute));
+	cudaEventCreate(&start_compute);
+	cudaEventCreate(&stop_compute);
 
-	checkCudaErrors(cudaEventCreate(&start_transfer));
-	checkCudaErrors(cudaEventCreate(&stop_transfer));
+	cudaEventCreate(&start_transfer);
+	cudaEventCreate(&stop_transfer);
 }
 
 bool NeuralNet::simulateNeuralNetworkMemory(vDNNConvAlgoPref algo_pref, bool hard, size_t &exp_max_consume, size_t &max_consume) {
@@ -595,7 +595,7 @@ bool NeuralNet::simulateCNMEMMemory(size_t &max_consume) {
 	cnmemDevice_t cnmem_device;
 
 	size_t t;
-	checkCudaErrors(cudaMemGetInfo(&free_bytes, &t));
+	cudaMemGetInfo(&free_bytes, &t);
 	std::cout << "free_bytes: " << free_bytes << std::endl;
 	free_bytes -= 100 * 1024 * 1024;
 	cnmem_device.device = 0;
@@ -1090,9 +1090,9 @@ void NeuralNet::getLoss(void *X, int *y, double learning_rate, std::vector<float
 
 	checkCNMEM(cnmemMalloc(&layer_input[0], layer_input_size[0] * data_type_size, NULL));
 	space_tracker.updateSpace(CnmemSpace::SUB, layer_input_size[0] * data_type_size);
-	checkCudaErrors(cudaMemcpy(layer_input[0], X, batch_size * input_channels * input_h * input_w * data_type_size, cudaMemcpyHostToDevice));
+	cudaMemcpy(layer_input[0], X, batch_size * input_channels * input_h * input_w * data_type_size, cudaMemcpyHostToDevice);
 	if (train == true) {
-		checkCudaErrors(cudaMemcpy(this->y, y, batch_size * data_type_size, cudaMemcpyHostToDevice));
+		cudaMemcpy(this->y, y, batch_size * data_type_size, cudaMemcpyHostToDevice);
 	}
 	float alpha = 1.0, beta = 0.0;
 	float Salpha = 1.0, Sbeta = 0.0;
@@ -1108,8 +1108,8 @@ void NeuralNet::getLoss(void *X, int *y, double learning_rate, std::vector<float
 
 		// offload if required
 		if (i > 0 && to_offload[i] && train == true)
-			checkCudaErrors(cudaMemcpyAsync(h_layer_input[i], layer_input[i], 
-											layer_input_size[i] * data_type_size, cudaMemcpyDeviceToHost, stream_memory));
+			cudaMemcpyAsync(h_layer_input[i], layer_input[i], 
+											layer_input_size[i] * data_type_size, cudaMemcpyDeviceToHost, stream_memory);
 
 		checkCNMEM(cnmemMalloc(&layer_input[i + 1], layer_input_size[i + 1] * data_type_size, NULL));
 		space_tracker.updateSpace(CnmemSpace::SUB, layer_input_size[i + 1] * data_type_size);
@@ -1291,12 +1291,12 @@ void NeuralNet::getLoss(void *X, int *y, double learning_rate, std::vector<float
 		}
 
 		struct timespec start_time, end_time;
-		checkCudaErrors(cudaStreamSynchronize(stream_compute));
+		cudaStreamSynchronize(stream_compute);
 		
 		if (train)
 			clock_gettime(CLOCK_MONOTONIC, &start_time);
 		
-		checkCudaErrors(cudaStreamSynchronize(stream_memory));
+		cudaStreamSynchronize(stream_memory);
 		
 
 		if (train) {
@@ -1344,12 +1344,12 @@ void NeuralNet::getLoss(void *X, int *y, double learning_rate, std::vector<float
 	if (layer_type[num_layers - 1] == SOFTMAX) {
 		// SoftmaxLayerParams *cur_params = (SoftmaxLayerParams *)params[num_layers - 1];
 		if (data_type == CUDNN_DATA_FLOAT) {
-			checkCudaErrors(cudaMemset(dlayer_input[num_layers], 0, batch_size * num_classes * sizeof(float)));
+			cudaMemset(dlayer_input[num_layers], 0, batch_size * num_classes * sizeof(float));
 			softmaxLossBackProp<float><<<ceil(1.0 * batch_size / BW), BW>>>(this->y, (float *)layer_input[num_layers], 
 																			(float *)dlayer_input[num_layers], batch_size, num_classes, softmax_eps);
 		}
 		else if (data_type == CUDNN_DATA_DOUBLE) {
-			checkCudaErrors(cudaMemset(dlayer_input[num_layers], 0, batch_size * num_classes * sizeof(double)));
+			cudaMemset(dlayer_input[num_layers], 0, batch_size * num_classes * sizeof(double));
 			softmaxLossBackProp<double><<<ceil(1.0 * batch_size / BW), BW>>>(this->y, (double *)layer_input[num_layers], 
 																			(double *)dlayer_input[num_layers], batch_size, num_classes, softmax_eps);
 		}
@@ -1370,13 +1370,13 @@ void NeuralNet::getLoss(void *X, int *y, double learning_rate, std::vector<float
 					space_tracker.updateSpace(CnmemSpace::SUB, layer_input_size[layer_to_prefetch] * data_type_size);
 					// std::cout << "Free bytes: " << free_bytes << std::endl;
 					if (layer_to_prefetch != 0) {
-						checkCudaErrors(cudaMemcpyAsync(layer_input[layer_to_prefetch], h_layer_input[layer_to_prefetch], 
-														layer_input_size[layer_to_prefetch] * data_type_size, cudaMemcpyHostToDevice, stream_memory));
+						cudaMemcpyAsync(layer_input[layer_to_prefetch], h_layer_input[layer_to_prefetch], 
+														layer_input_size[layer_to_prefetch] * data_type_size, cudaMemcpyHostToDevice, stream_memory);
 					}
 					else {
 						// std::cout << "transfer here\n";
-						checkCudaErrors(cudaMemcpyAsync(layer_input[layer_to_prefetch], X, 
-														layer_input_size[layer_to_prefetch] * data_type_size, cudaMemcpyHostToDevice, stream_memory));
+						cudaMemcpyAsync(layer_input[layer_to_prefetch], X, 
+														layer_input_size[layer_to_prefetch] * data_type_size, cudaMemcpyHostToDevice, stream_memory);
 						// std::cout << "transfer here\n";
 					}
 				}
@@ -1600,12 +1600,12 @@ void NeuralNet::getLoss(void *X, int *y, double learning_rate, std::vector<float
 		
 		// checkCudaErrors(cudaDeviceSynchronize());
 		struct timespec start_time, end_time;
-		checkCudaErrors(cudaStreamSynchronize(stream_compute));
+		cudaStreamSynchronize(stream_compute);
 
 		if (train)
 			clock_gettime(CLOCK_MONOTONIC, &start_time);
 
-		checkCudaErrors(cudaStreamSynchronize(stream_memory));
+		cudaStreamSynchronize(stream_memory);
 		if (train) {
 			clock_gettime(CLOCK_MONOTONIC, &end_time);
 			float lag = (end_time.tv_sec - start_time.tv_sec) * 1e3 + (end_time.tv_nsec - start_time.tv_nsec) * 1e-6;
