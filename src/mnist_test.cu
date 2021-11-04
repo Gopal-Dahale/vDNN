@@ -9,7 +9,7 @@ using namespace std;
 
 typedef unsigned char uchar;
 
-int num_train = 60000, num_test = 10000;
+int num_train = 1000, num_test = 500;
 
 int reverseInt(int n) {
 	int bytes = 4;
@@ -203,7 +203,7 @@ int main() {
 	float init_std_dev = 0.01;
 	NeuralNet net(layer_specifier, DATA_FLOAT, batch_size, TENSOR_NCHW, dropout_seed, softmax_eps, init_std_dev, vDNN_ALL, vDNN_MEMORY_OPTIMAL, SGD);
 
-	int num_epoch = 10;
+	int num_epoch = 100;
 	double learning_rate = 1e-4;
 	double learning_rate_decay = 0.9;
 	
