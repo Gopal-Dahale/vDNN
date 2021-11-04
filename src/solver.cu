@@ -136,8 +136,8 @@ void Solver::train(std::vector<float> &loss, std::vector<int> &val_acc) {
 			float temp_loss = step(start_sample, j * batch_size);
 
 			cudaEventRecord(stop, model->stream_compute);
-			cudaEventSynchronize(stop));
-			cudaEventElapsedTime(&milli, start, stop));
+			cudaEventSynchronize(stop);
+			cudaEventElapsedTime(&milli, start, stop);
 			std::cout << "One forward, backward pass time(ms): " << milli << std::endl;
 			
 			loss.push_back(temp_loss);
