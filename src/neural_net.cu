@@ -1585,7 +1585,7 @@ void NeuralNet::getLoss(void *X, int *y, double learning_rate, std::vector<float
 		}
 
 		else if (layer_type[i] == SOFTMAX) {
-			// std::cout << "compute here\n";
+			std::cout << "compute here\n";
 			SoftmaxLayerParams *cur_params = (SoftmaxLayerParams *)params[i];
 			checkCUDNN(cudnnSoftmaxBackward(cudnn_handle, cur_params->algo, cur_params->mode, &alpha,
 											cur_params->input_tensor, layer_input[i + 1],
