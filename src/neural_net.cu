@@ -1101,7 +1101,10 @@ void NeuralNet::getLoss(void *X, int *y, double learning_rate, std::vector<float
 	// forward propagate
 	for (int i = 0; i < num_layers; i++) {
 		if (train == false && i == num_layers - 1)
+		{
+			std :: cout << "IN val\n";
 			break;
+		}
 		// ---------------------- vDNN start ----------------------
 		size_t cur_workspace_size;
 		void *cur_workspace;
@@ -1278,6 +1281,7 @@ void NeuralNet::getLoss(void *X, int *y, double learning_rate, std::vector<float
 		// the case in above if for ACTV and SOFTMAX never occurs
 		if (layer_type[i + 1] == SOFTMAX) {
 			i++;
+			std :: cout << "IN soft\n";
 			if (train == true) {
 				layer_input[i + 1] = layer_input[i];
 				SoftmaxLayerParams *cur_params = (SoftmaxLayerParams *)params[i];
@@ -1585,7 +1589,7 @@ void NeuralNet::getLoss(void *X, int *y, double learning_rate, std::vector<float
 		}
 
 		else if (layer_type[i] == SOFTMAX) {
-			std::cout << "compute here\n";
+// 			std::cout << "compute here\n";
 			SoftmaxLayerParams *cur_params = (SoftmaxLayerParams *)params[i];
 			checkCUDNN(cudnnSoftmaxBackward(cudnn_handle, cur_params->algo, cur_params->mode, &alpha,
 											cur_params->input_tensor, layer_input[i + 1],
