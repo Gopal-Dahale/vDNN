@@ -480,14 +480,14 @@ int main() {
     layer_specifier.push_back(temp);
   }
 
-	int batch_size = 128;
+	int batch_size = 64;
 	long long dropout_seed = 1;
 	float softmax_eps = 1e-8;
 	float init_std_dev = 0.01;
 	NeuralNet net(layer_specifier, DATA_FLOAT, batch_size, TENSOR_NCHW, dropout_seed, softmax_eps, init_std_dev, vDNN_ALL, vDNN_MEMORY_OPTIMAL, SGD);
 
 	int num_epoch = 100;
-	double learning_rate = 1e-4;
+	double learning_rate = 1e-3;
 	double learning_rate_decay = 0.9;
 	
 	Solver solver(&net, (void *)f_train_images, f_train_labels, (void *)f_train_images, f_train_labels, num_epoch, SGD, learning_rate, learning_rate_decay, num_train, num_train);
