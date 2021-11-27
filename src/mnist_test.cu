@@ -465,26 +465,10 @@ int main() {
   }
   {
     FCDescriptor part5_fc2;
-    part5_fc2.initializeValues(4096, 1000);
+    part5_fc2.initializeValues(4096, 10);
     LayerSpecifier temp;
     temp.initPointer(FULLY_CONNECTED);
     *((FCDescriptor *)temp.params) = part5_fc2;
-    layer_specifier.push_back(temp);
-  }
-  {
-    FCDescriptor part5_fc3;
-    part5_fc3.initializeValues(1000, 100);
-    LayerSpecifier temp;
-    temp.initPointer(FULLY_CONNECTED);
-    *((FCDescriptor *)temp.params) = part5_fc3;
-    layer_specifier.push_back(temp);
-  }
-  {
-    FCDescriptor part5_fc4;
-    part5_fc4.initializeValues(100, 10);
-    LayerSpecifier temp;
-    temp.initPointer(FULLY_CONNECTED);
-    *((FCDescriptor *)temp.params) = part5_fc4;
     layer_specifier.push_back(temp);
   }
   {
