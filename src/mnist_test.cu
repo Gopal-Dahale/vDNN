@@ -222,7 +222,7 @@ int main() {
 	{
 		vector<vector<uchar> > train_images, test_images;
 		vector<uchar> train_labels, test_labels;
-		readMNIST(train_images, test_images, train_labels, test_labels);
+		readMNIST224(train_images, test_images, train_labels, test_labels);
 	
 		for (int k = 0; k < num_train; k++) {
 			for (int j = 0; j < rows * cols; j++) {
