@@ -1281,7 +1281,7 @@ void NeuralNet::getLoss(void *X, int *y, double learning_rate, std::vector<float
 		// the case in above if for ACTV and SOFTMAX never occurs
 		if (layer_type[i + 1] == SOFTMAX) {
 			i++;
-			std :: cout << "IN soft\n";
+// 			std :: cout << "IN soft\n";
 			if (train == true) {
 				layer_input[i + 1] = layer_input[i];
 				SoftmaxLayerParams *cur_params = (SoftmaxLayerParams *)params[i];
