@@ -484,7 +484,7 @@ int main() {
 	long long dropout_seed = 1;
 	float softmax_eps = 1e-8;
 	float init_std_dev = 0.01;
-	NeuralNet net(layer_specifier, DATA_FLOAT, batch_size, TENSOR_NCHW, dropout_seed, softmax_eps, init_std_dev, vDNN_ALL, vDNN_MEMORY_OPTIMAL, SGD);
+	NeuralNet net(layer_specifier, DATA_FLOAT, batch_size, TENSOR_NCHW, dropout_seed, softmax_eps, init_std_dev, vDNN_NONE, vDNN_PERFORMANCE_OPTIMAL, SGD);
 
 	int num_epoch = 100;
 	double learning_rate = 1e-4;
