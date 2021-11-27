@@ -209,7 +209,7 @@ void readMNIST224(vector<vector<uchar>> &train_images,
 
 int main() {
 
-	int rows = 28, cols = 28, channels = 1;
+	int rows = 224, cols = 224, channels = 1;
 	float *f_train_images, *f_test_images;
 	int *f_train_labels, *f_test_labels;
 	// int rows = 28, cols = 28, channels = 1;
