@@ -223,7 +223,8 @@ int main() {
   {
     vector<vector<uchar>> train_images, test_images;
     vector<uchar> train_labels, test_labels;
-    readMNIST224(train_images, test_images, train_labels, test_labels);
+    readMNIST224(train_images, test_images, train_labels, test_labels,
+                 num_train, num_test);
 
     for (int k = 0; k < num_train; k++) {
       for (int j = 0; j < rows * cols; j++) {
@@ -290,8 +291,9 @@ int main() {
   // 	}
   // 	{
   // 		SoftmaxDescriptor layer2_smax;
-  // 		layer2_smax.initializeValues(SOFTMAX_ACCURATE, SOFTMAX_MODE_INSTANCE,
-  // 10, 1, 1); 		LayerSpecifier temp; 		temp.initPointer(SOFTMAX);
+  // 		layer2_smax.initializeValues(SOFTMAX_ACCURATE,
+  // SOFTMAX_MODE_INSTANCE, 10, 1, 1); 		LayerSpecifier temp;
+  // temp.initPointer(SOFTMAX);
   // 		*((SoftmaxDescriptor *)temp.params) = layer2_smax;
   // 		layer_specifier.push_back(temp);
   // 	}
