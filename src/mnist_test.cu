@@ -230,7 +230,10 @@ int main(int argc, char *argv[]) {
           "num-train", "Number of training examples to use",
           cxxopts::value<int>()->default_value("1000"))(
           "num-test", "Number of testing examples to use",
-          cxxopts::value<int>()->default_value("500"))("help", "Print Usage");
+          cxxopts::value<int>()->default_value("500"))(
+          "type", "VDNN type", cxxopts::value<int>()->default_value("0"))(
+          "algo", "VDNN algo", cxxopts::value<int>()->default_value("0"))(
+          "help", "Print Usage");
 
   auto result = options.parse(argc, argv);
   if (result.count("help")) {
@@ -240,6 +243,47 @@ int main(int argc, char *argv[]) {
 
   num_train = result["num-train"].as<int>();
   num_test = result["num-test"].as<int>();
+
+  auto vDNN_type = vDNN_ALL;
+  int type = result["type"].as<int>();
+  switch (type) {
+    case 0:
+      vDNN_type = vDNN_ALL;
+      std::cout << "vDNN_ALL" << std::endl;
+      break;
+    case 1:
+      vDNN_type = vDNN_CONV;
+      std::cout << "vDNN_CONV" << std::endl;
+      break;
+    case 2:
+      vDNN_type = vDNN_NONE;
+      std::cout << "vDNN_NONE" << std::endl;
+      break;
+    case 3:
+      vDNN_type = vDNN_DYN;
+      std::cout << "vDNN_DYN" << std::endl;
+      break;
+    case 4:
+      vDNN_type = vDNN_ALTERNATE_CONV;
+      std::cout << "vDNN_ALTERNATE_CONV" << std::endl;
+    default:
+      break;
+  }
+
+  auto vDNN_algo = vDNN_PERFORMANCE_OPTIMAL;
+  int algo = result["algo"].as<int>();
+  switch (algo) {
+    case 0:
+      vDNN_algo = vDNN_PERFORMANCE_OPTIMAL;
+      std::cout << "vDNN_PERFORMANCE_OPTIMAL" << std::endl;
+      break;
+    case 1:
+      vDNN_algo = vDNN_MEMORY_OPTIMAL;
+      std::cout << "vDNN_MEMORY_OPTIMAL" << std::endl;
+      break;
+    default:
+      break;
+  }
 
   int rows = 224, cols = 224, channels = 1;
   float *f_train_images, *f_test_images;
@@ -499,8 +543,8 @@ int main(int argc, char *argv[]) {
   }
 
   NeuralNet net(layer_specifier, DATA_FLOAT, batch_size, TENSOR_NCHW,
-                dropout_seed, softmax_eps, init_std_dev, vDNN_ALL,
-                vDNN_MEMORY_OPTIMAL, SGD);
+                dropout_seed, softmax_eps, init_std_dev, vDNN_type, vDNN_algo,
+                SGD);
 
   Solver solver(&net, (void *)f_train_images, f_train_labels,
                 (void *)f_train_images, f_train_labels, num_epoch, SGD,
