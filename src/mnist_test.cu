@@ -12,6 +12,7 @@
 
 #include "cxxopts.hpp"
 #include "vgg16.h"
+#include "vgg19.h"
 
 using namespace std;
 
@@ -233,7 +234,9 @@ int main(int argc, char *argv[]) {
           cxxopts::value<int>()->default_value("512"))(
           "type", "VDNN type", cxxopts::value<int>()->default_value("0"))(
           "algo", "VDNN algo", cxxopts::value<int>()->default_value("0"))(
-          "help", "Print Usage");
+          "net", "network",
+          cxxopts::value<std::string>()->default_value("vgg16"))("help",
+                                                                 "Print Usage");
 
   auto result = options.parse(argc, argv);
   if (result.count("help")) {
@@ -341,6 +344,14 @@ int main(int argc, char *argv[]) {
 
   VGG16 vgg16;
   auto layer_specifier = vgg16.layer_specifier;
+  auto net = result["net"].as<std::string>();
+  if (net == "vgg19") {
+    VGG19 vgg19;
+    layer_specifier = vgg19.layer_specifier;
+    std::cout << "Network: VGG19" << std::endl;
+  } else {
+    std::cout << "Network: VGG16" << std::endl;
+  }
 
   /**************************** Configuration ****************************/
   int batch_size = result["batch-size"].as<int>();
