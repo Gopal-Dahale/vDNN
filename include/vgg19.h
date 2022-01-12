@@ -8,7 +8,7 @@ class VGG19 {
  public:
   // VGG NET
   std::vector<LayerSpecifier> layer_specifier;
-  VGG16() {
+  VGG19() {
     {
       ConvDescriptor part0_conv0;
       part0_conv0.initializeValues(1, 64, 3, 3, 224, 224, 1, 1, 1, 1, RELU);
