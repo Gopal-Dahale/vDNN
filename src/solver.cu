@@ -21,23 +21,23 @@ Solver::Solver(NeuralNet *model, void *X_train, int *y_train, void *X_val,
   cudaEventCreate(&stop);
 }
 
-float Solver::step(int start_X, int start_y) {
+float Solver::step(int start_X, int start_y, float &total_overhead) {
   std::vector<float> t1, t2;
-  return this->step(start_X, start_y, t1, t2);
+  return this->step(start_X, start_y, t1, t2, total_overhead);
 }
 
 float Solver::step(int start_X, int start_y, std::vector<float> &fwd_vdnn_lag,
-                   std::vector<float> &bwd_vdnn_lag) {
+                   std::vector<float> &bwd_vdnn_lag, float &total_overhead) {
   float temp_loss;
   // std::cout << "start_X: " << start_X << std::endl;
   if (model->data_type == CUDNN_DATA_FLOAT)
     model->getLoss(&(((float *)X_train)[start_X]), &y_train[start_y],
-                   learning_rate, fwd_vdnn_lag, bwd_vdnn_lag, true, NULL,
-                   &temp_loss);
+                   learning_rate, fwd_vdnn_lag, bwd_vdnn_lag, total_overhead,
+                   true, NULL, &temp_loss);
   else if (model->data_type == CUDNN_DATA_DOUBLE)
     model->getLoss(&(((double *)X_train)[start_X]), &y_train[start_y],
-                   learning_rate, fwd_vdnn_lag, bwd_vdnn_lag, true, NULL,
-                   &temp_loss);
+                   learning_rate, fwd_vdnn_lag, bwd_vdnn_lag, total_overhead,
+                   true, NULL, &temp_loss);
 
   // float Salpha = -learning_rate;
   // double Dalpha = -learning_rate;
@@ -140,6 +140,7 @@ float Solver::step(int start_X, int start_y, std::vector<float> &fwd_vdnn_lag,
 
 void Solver::train(std::vector<float> &loss, std::vector<int> &val_acc) {
   std::vector<float> batch_time;
+  float total_overhead = 0;
   int batch_size = model->batch_size;
   int num_train_batches = num_train / model->batch_size;
   int num_val_batches = num_val / model->batch_size;
@@ -150,7 +151,7 @@ void Solver::train(std::vector<float> &loss, std::vector<int> &val_acc) {
       float milli = 0;
       cudaEventRecord(start, model->stream_compute);
 
-      float temp_loss = step(start_sample, j * batch_size);
+      float temp_loss = step(start_sample, j * batch_size, total_overhead);
 
       cudaEventRecord(stop, model->stream_compute);
       cudaEventSynchronize(stop);
@@ -168,12 +169,12 @@ void Solver::train(std::vector<float> &loss, std::vector<int> &val_acc) {
       int temp_correct_count;
       if (model->data_type == CUDNN_DATA_FLOAT)
         model->getLoss(&(((float *)X_val)[start_sample]),
-                       &y_val[j * batch_size], learning_rate, false,
-                       &temp_correct_count, NULL);
+                       &y_val[j * batch_size], learning_rate, total_overhead,
+                       false, &temp_correct_count, NULL);
       else if (model->data_type == CUDNN_DATA_DOUBLE)
         model->getLoss(&(((double *)X_val)[start_sample]),
-                       &y_val[j * batch_size], learning_rate, false,
-                       &temp_correct_count, NULL);
+                       &y_val[j * batch_size], learning_rate, total_overhead,
+                       false, &temp_correct_count, NULL);
       correct_count += temp_correct_count;
     }
     val_acc.push_back(correct_count);
@@ -196,9 +197,16 @@ void Solver::train(std::vector<float> &loss, std::vector<int> &val_acc) {
   f.open(file_name, std::ios::out);
   for (auto &i : batch_time) f << i << std::endl;
   f.close();
+
+  // Write total overhead to file
+  file_name = "./res/overhead_" + net_name + "_" + std::to_string(bs) + ".txt";
+  f.open(file_name, std::ios::out);
+  f << total_overhead << std::endl;
+  f.close();
 }
 
 void Solver::checkAccuracy(void *X, int *y, int num_samples, int *num_correct) {
+  float total_overhead = 0;
   int batch_size = model->batch_size;
   int num_iter = num_samples / batch_size;
   *num_correct = 0;
@@ -207,10 +215,12 @@ void Solver::checkAccuracy(void *X, int *y, int num_samples, int *num_correct) {
     int temp_correct_count;
     if (model->data_type == CUDNN_DATA_FLOAT)
       model->getLoss(&(((float *)X)[start_sample]), &y[i * batch_size],
-                     learning_rate, false, &temp_correct_count, NULL);
+                     learning_rate, total_overhead, false, &temp_correct_count,
+                     NULL);
     else if (model->data_type == CUDNN_DATA_DOUBLE)
       model->getLoss(&(((double *)X)[start_sample]), &y[i * batch_size],
-                     learning_rate, false, &temp_correct_count, NULL);
+                     learning_rate, total_overhead, false, &temp_correct_count,
+                     NULL);
     *num_correct = *num_correct + temp_correct_count;
   }
 }
@@ -219,6 +229,7 @@ void Solver::getTrainTime(std::vector<float> &loss, std::vector<float> &time,
                           int num_epoch,
                           std::vector<std::vector<float> > &fwd_vdnn_lag,
                           std::vector<std::vector<float> > &bwd_vdnn_lag) {
+  float total_overhead = 0;
   int batch_size = model->batch_size;
   int num_train_batches = num_train / model->batch_size;
   for (int i = 0; i < num_epoch; i++) {
@@ -230,7 +241,7 @@ void Solver::getTrainTime(std::vector<float> &loss, std::vector<float> &time,
 
       std::vector<float> cur_fwd_vdnn_lag, cur_bwd_vdnn_lag;
       float temp_loss = step(start_sample, j * batch_size, cur_fwd_vdnn_lag,
-                             cur_bwd_vdnn_lag);
+                             cur_bwd_vdnn_lag, total_overhead);
 
       cudaEventRecord(stop);
       cudaEventSynchronize(stop);

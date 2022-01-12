@@ -1215,16 +1215,18 @@ void NeuralNet::resetPrefetched() {
   for (int i = 0; i < num_layers; i++) prefetched[i] = false;
 }
 
-void NeuralNet::getLoss(void *X, int *y, double learning_rate, bool train,
-                        int *correct_count, float *loss) {
+void NeuralNet::getLoss(void *X, int *y, double learning_rate,
+                        float &total_overhead, bool train, int *correct_count,
+                        float *loss) {
   std::vector<float> t1, t2;
-  this->getLoss(X, y, learning_rate, t1, t2, train, correct_count, loss);
+  this->getLoss(X, y, learning_rate, t1, t2, total_overhead, train,
+                correct_count, loss);
 }
 
 void NeuralNet::getLoss(void *X, int *y, double learning_rate,
                         std::vector<float> &fwd_vdnn_lag,
-                        std::vector<float> &bwd_vdnn_lag, bool train,
-                        int *correct_count, float *scalar_loss) {
+                        std::vector<float> &bwd_vdnn_lag, float &total_overhead,
+                        bool train, int *correct_count, float *scalar_loss) {
   CnmemSpace space_tracker(free_bytes);
   // std::cout << "here\n";
   // std::cout << "Free bytes: " << free_bytes << std::endl;
@@ -1300,6 +1302,12 @@ void NeuralNet::getLoss(void *X, int *y, double learning_rate,
   }
   f.close();
 
+  cudaEvent_t overhead_start, overhead_stop;
+  cudaEventCreate(&overhead_start);
+  cudaEventCreate(&overhead_stop);
+  float overhead_time = 0;
+  float total_overhead_time = 0;
+
   // forward propagate
   for (int i = 0; i < num_layers; i++) {
     if (train == false && i == num_layers - 1) {
@@ -1311,10 +1319,16 @@ void NeuralNet::getLoss(void *X, int *y, double learning_rate,
     void *cur_workspace;
 
     // offload if required
-    if (i > 0 && to_offload[i] && train == true)
+    if (i > 0 && to_offload[i] && train == true) {
+      cudaEventRecord(overhead_start);
       cudaMemcpyAsync(h_layer_input[i], layer_input[i],
                       layer_input_size[i] * data_type_size,
                       cudaMemcpyDeviceToHost, stream_memory);
+      cudaEventRecord(overhead_stop);
+      cudaEventSynchronize(overhead_stop);
+      cudaEventElapsedTime(&overhead_time, overhead_start, overhead_stop);
+      total_overhead_time += overhead_time;
+    }
 
     checkCNMEM(cnmemMalloc(&layer_input[i + 1],
                            layer_input_size[i + 1] * data_type_size, NULL));
@@ -1466,15 +1480,19 @@ void NeuralNet::getLoss(void *X, int *y, double learning_rate,
     struct timespec start_time, end_time;
     cudaStreamSynchronize(stream_compute);
 
-    if (train) clock_gettime(CLOCK_MONOTONIC, &start_time);
+    if (train) cudaEventRecord(overhead_start);
 
     cudaStreamSynchronize(stream_memory);
 
     if (train) {
-      clock_gettime(CLOCK_MONOTONIC, &end_time);
-      float lag = (end_time.tv_sec - start_time.tv_sec) * 1e3 +
-                  (end_time.tv_nsec - start_time.tv_nsec) * 1e-6;
-      fwd_vdnn_lag.push_back(lag);
+      cudaEventRecord(overhead_stop);
+      cudaEventSynchronize(overhead_stop);
+      cudaEventElapsedTime(&overhead_time, overhead_start, overhead_stop);
+      total_overhead_time += overhead_time;
+      // clock_gettime(CLOCK_MONOTONIC, &end_time);
+      // float lag = (end_time.tv_sec - start_time.tv_sec) * 1e3 +
+      //             (end_time.tv_nsec - start_time.tv_nsec) * 1e-6;
+      // fwd_vdnn_lag.push_back(lag);
     }
     // std::cout << "EndSynchere" << i << std::endl;
     if (layer_type[i] == CONV) {
@@ -1549,6 +1567,7 @@ void NeuralNet::getLoss(void *X, int *y, double learning_rate,
       } else {
         int layer_to_prefetch = findPrefetchLayer(i);
         if (layer_to_prefetch != -1) {
+          cudaEventRecord(overhead_start);
           checkCNMEM(cnmemMalloc(
               &layer_input[layer_to_prefetch],
               layer_input_size[layer_to_prefetch] * data_type_size, NULL));
@@ -1570,6 +1589,11 @@ void NeuralNet::getLoss(void *X, int *y, double learning_rate,
                 cudaMemcpyHostToDevice, stream_memory);
             // std::cout << "transfer here\n";
           }
+
+          cudaEventRecord(overhead_stop);
+          cudaEventSynchronize(overhead_stop);
+          cudaEventElapsedTime(&overhead_time, overhead_start, overhead_stop);
+          total_overhead_time += overhead_time;
         }
         checkCNMEM(cnmemMalloc(&dlayer_input[i],
                                layer_input_size[i] * data_type_size, NULL));
@@ -1780,14 +1804,18 @@ void NeuralNet::getLoss(void *X, int *y, double learning_rate,
     struct timespec start_time, end_time;
     cudaStreamSynchronize(stream_compute);
 
-    if (train) clock_gettime(CLOCK_MONOTONIC, &start_time);
+    if (train) cudaEventRecord(overhead_start);
 
     cudaStreamSynchronize(stream_memory);
     if (train) {
-      clock_gettime(CLOCK_MONOTONIC, &end_time);
-      float lag = (end_time.tv_sec - start_time.tv_sec) * 1e3 +
-                  (end_time.tv_nsec - start_time.tv_nsec) * 1e-6;
-      bwd_vdnn_lag.insert(bwd_vdnn_lag.begin(), lag);
+      cudaEventRecord(overhead_stop);
+      cudaEventSynchronize(overhead_stop);
+      cudaEventElapsedTime(&overhead_time, overhead_start, overhead_stop);
+      total_overhead_time += overhead_time;
+      // clock_gettime(CLOCK_MONOTONIC, &end_time);
+      // float lag = (end_time.tv_sec - start_time.tv_sec) * 1e3 +
+      //             (end_time.tv_nsec - start_time.tv_nsec) * 1e-6;
+      // bwd_vdnn_lag.insert(bwd_vdnn_lag.begin(), lag);
     }
 
     if (layer_type[i] == CONV) {
@@ -1837,7 +1865,7 @@ void NeuralNet::getLoss(void *X, int *y, double learning_rate,
   if (space_tracker.getConsumed() != 0) {
     std::cout << "Panic!! Space not updated properly\n";
   }
-
+  total_overhead += total_overhead_time;
   // exit(0);
 }
 
