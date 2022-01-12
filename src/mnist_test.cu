@@ -344,8 +344,8 @@ int main(int argc, char *argv[]) {
 
   VGG16 vgg16;
   auto layer_specifier = vgg16.layer_specifier;
-  auto net = result["net"].as<std::string>();
-  if (net == "vgg19") {
+  auto neural_net = result["net"].as<std::string>();
+  if (neural_net == "vgg19") {
     VGG19 vgg19;
     layer_specifier = vgg19.layer_specifier;
     std::cout << "Network: VGG19" << std::endl;
