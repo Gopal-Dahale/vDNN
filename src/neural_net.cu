@@ -1265,12 +1265,10 @@ void NeuralNet::getLoss(void *X, int *y, double learning_rate,
       ConvLayerParams *cur_params = (ConvLayerParams *)params[i];
       auto ws = cur_params->fwd_workspace_size;
       auto filter_ws = cur_params->bwd_filter_workspace_size;
-      auto data_ws = 0;
-      if (i > 0) data_ws = cur_params->bwd_data_workspace_size;
-      auto backward_ws = ((filter_ws > data_ws) ? filter_ws : data_ws);
-      f << ws + backward_ws << " ";
+      auto back_ws = cur_params->bwd_data_workspace_size;
+      f << ws << " " << filter_ws << " " << back_ws << " ";
     } else {
-      f << 0 << " ";
+      f << 0 << " " << 0 << " " << 0 << " ";
     }
 
     auto wb_size = 0;
