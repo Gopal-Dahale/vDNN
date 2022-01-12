@@ -483,6 +483,20 @@ int main(int argc, char *argv[]) {
   double learning_rate = result["learning-rate"].as<double>();
   double learning_rate_decay = result["learning-rate-decay"].as<double>();
   long long dropout_seed = 1;
+  /************************ Display configuration *************************/
+  unordered_map<string, double> configs = {
+      {"batch_size", batch_size},
+      {"softmax_eps", softmax_eps},
+      {"init_std_dev", init_std_dev},
+      {"num_epoch", num_epoch},
+      {"learning_rate", learning_rate},
+      {"learning_rate_decay", learning_rate_decay},
+      {"num_train", num_train},
+      {"num_test", num_test}};
+
+  for (auto &config : configs) {
+    cout << config.first << ": " << config.second << endl;
+  }
 
   NeuralNet net(layer_specifier, DATA_FLOAT, batch_size, TENSOR_NCHW,
                 dropout_seed, softmax_eps, init_std_dev, vDNN_ALL,
