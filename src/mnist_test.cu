@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "cxxopts.hpp"
 #include "solver.h"
 
 using namespace std;
@@ -209,7 +210,37 @@ void readMNIST224(vector<vector<uchar>> &train_images,
   assert(test_images.size() == test_labels.size());
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+  /******************* Parse command line arguments ********************/
+  cxxopts::Options options("VDNN", "VDNN");
+
+  options.add_options()(
+      "batch-size", "Batch Size",
+      cxxopts::value<int>()->default_value("64"))  // a bool parameter
+      ("softmax-eps", "softmax eps",
+       cxxopts::value<float>()->default_value("1e-8"))(
+          "init-std-dev", "initial standard deviation",
+          cxxopts::value<float>()->default_value("0.01"))(
+          "epochs", "Number of epochs",
+          cxxopts::value<int>()->default_value("5"))(
+          "learning-rate", "Learning Rate",
+          cxxopts::value<double>()->default_value("0.01"))(
+          "learning-rate-decay", "Learning Rate Decay",
+          cxxopts::value<double>()->default_value("1"))(
+          "num-train", "Number of training examples to use",
+          cxxopts::value<int>()->default_value("1000"))(
+          "num-test", "Number of testing examples to use",
+          cxxopts::value<int>()->default_value("500"))("help", "Print Usage");
+
+  auto result = options.parse(argc, argv);
+  if (result.count("help")) {
+    std::cout << options.help() << std::endl;
+    exit(0);
+  }
+
+  num_train = result["num-train"].as<int>();
+  num_test = result["num-test"].as<int>();
+
   int rows = 224, cols = 224, channels = 1;
   float *f_train_images, *f_test_images;
   int *f_train_labels, *f_test_labels;
@@ -263,40 +294,6 @@ int main() {
       f_test_images[i * input_size + j] -= mean_image[j];
     }
   }
-
-  // 	vector<LayerSpecifier> layer_specifier;
-  // 	{
-  // 		ConvDescriptor layer0;
-  // 		layer0.initializeValues(1, 3, 3, 3, 28, 28, 1, 1, 1, 1, RELU);
-  // 		LayerSpecifier temp;
-  // 		temp.initPointer(CONV);
-  // 		*((ConvDescriptor *)temp.params) = layer0;
-  // 		layer_specifier.push_back(temp);
-  // 	}
-  // 	{
-  // 		FCDescriptor layer1;
-  // 		layer1.initializeValues(3 * 28 * 28, 50, RELU);
-  // 		LayerSpecifier temp;
-  // 		temp.initPointer(FULLY_CONNECTED);
-  // 		*((FCDescriptor *)temp.params) = layer1;
-  // 		layer_specifier.push_back(temp);
-  // 	}
-  // 	{
-  // 		FCDescriptor layer2;
-  // 		layer2.initializeValues(50, 10);
-  // 		LayerSpecifier temp;
-  // 		temp.initPointer(FULLY_CONNECTED);
-  // 		*((FCDescriptor *)temp.params) = layer2;
-  // 		layer_specifier.push_back(temp);
-  // 	}
-  // 	{
-  // 		SoftmaxDescriptor layer2_smax;
-  // 		layer2_smax.initializeValues(SOFTMAX_ACCURATE,
-  // SOFTMAX_MODE_INSTANCE, 10, 1, 1); 		LayerSpecifier temp;
-  // temp.initPointer(SOFTMAX);
-  // 		*((SoftmaxDescriptor *)temp.params) = layer2_smax;
-  // 		layer_specifier.push_back(temp);
-  // 	}
 
   // VGG NET
   vector<LayerSpecifier> layer_specifier;
@@ -478,17 +475,18 @@ int main() {
     layer_specifier.push_back(temp);
   }
 
-  int batch_size = 64;
+  /**************************** Configuration ****************************/
+  int batch_size = result["batch-size"].as<int>();
+  float softmax_eps = result["softmax-eps"].as<float>();
+  float init_std_dev = result["init-std-dev"].as<float>();
+  int num_epoch = result["epochs"].as<int>();
+  double learning_rate = result["learning-rate"].as<double>();
+  double learning_rate_decay = result["learning-rate-decay"].as<double>();
   long long dropout_seed = 1;
-  float softmax_eps = 1e-8;
-  float init_std_dev = 0.01;
+
   NeuralNet net(layer_specifier, DATA_FLOAT, batch_size, TENSOR_NCHW,
                 dropout_seed, softmax_eps, init_std_dev, vDNN_ALL,
                 vDNN_MEMORY_OPTIMAL, SGD);
-
-  int num_epoch = 10;
-  double learning_rate = 1e-3;
-  double learning_rate_decay = 0.9;
 
   Solver solver(&net, (void *)f_train_images, f_train_labels,
                 (void *)f_train_images, f_train_labels, num_epoch, SGD,
