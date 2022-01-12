@@ -545,7 +545,7 @@ int main(int argc, char *argv[]) {
   /************** Write network and batch size to file *******************/
   std::fstream f;
   f.open("./res/config.txt", std::fstream::out);
-  f << "vgg" << std::endl;
+  f << "vgg16" << std::endl;
   f << batch_size << std::endl;
   f.close();
 
@@ -553,12 +553,39 @@ int main(int argc, char *argv[]) {
                 dropout_seed, softmax_eps, init_std_dev, vDNN_type, vDNN_algo,
                 SGD);
 
+  cudaEvent_t train_start, train_stop;
+  cudaEventCreate(&train_start);
+  cudaEventCreate(&train_stop);
+  float train_time = 0;
+
   Solver solver(&net, (void *)f_train_images, f_train_labels,
                 (void *)f_train_images, f_train_labels, num_epoch, SGD,
                 learning_rate, learning_rate_decay, num_train, num_train);
+
   vector<float> loss;
   vector<int> val_acc;
+
+  cudaEventRecord(train_start);
+
   solver.train(loss, val_acc);
+
+  cudaEventRecord(train_stop);
+  cudaEventSynchronize(train_stop);
+  cudaEventElapsedTime(&train_time, train_start, train_stop);
+
+  // Write the total execution time (train_time) to file
+  f.open("./res/config.txt", std::ios::in);
+  std::string net_name;
+  f >> net_name;
+  int bs;
+  f >> bs;
+  f.close();
+  std::string file_name =
+      "./res/total_time" + net_name + "_" + std::to_string(bs) + ".txt";
+  f.open(file_name, std::ios::out);
+  f << train_time << std::endl;
+  f.close();
+
   int num_correct;
   solver.checkAccuracy(f_train_images, f_train_labels, num_train, &num_correct);
   cout << num_correct << endl;
