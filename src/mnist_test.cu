@@ -542,6 +542,13 @@ int main(int argc, char *argv[]) {
     cout << config.first << ": " << config.second << endl;
   }
 
+  /************** Write network and batch size to file *******************/
+  std::fstream f;
+  f.open("./res/config.txt", std::fstream::out);
+  f << "vgg" << std::endl;
+  f << batch_size << std::endl;
+  f.close();
+
   NeuralNet net(layer_specifier, DATA_FLOAT, batch_size, TENSOR_NCHW,
                 dropout_seed, softmax_eps, init_std_dev, vDNN_type, vDNN_algo,
                 SGD);
