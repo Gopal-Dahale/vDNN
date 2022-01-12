@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "alexnet.h"
 #include "cxxopts.hpp"
 #include "vgg16.h"
 #include "vgg19.h"
@@ -349,6 +350,10 @@ int main(int argc, char *argv[]) {
     VGG19 vgg19;
     layer_specifier = vgg19.layer_specifier;
     std::cout << "Network: VGG19" << std::endl;
+  } else if (neural_net == "alexnet") {
+    Alexnet alexnet;
+    layer_specifier = alexnet.layer_specifier;
+    std::cout << "Network: Alexnet" << std::endl;
   } else {
     std::cout << "Network: VGG16" << std::endl;
   }
