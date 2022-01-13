@@ -384,7 +384,7 @@ int main(int argc, char *argv[]) {
   /************** Write network and batch size to file *******************/
   std::fstream f;
   f.open("./res/config.txt", std::fstream::out);
-  f << "vgg16" << std::endl;
+  f << neural_net << std::endl;
   f << batch_size << std::endl;
   f.close();
 
