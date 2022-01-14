@@ -394,7 +394,7 @@ int main(int argc, char *argv[]) {
   std::fstream f;
   f.open("./res/config.txt", std::fstream::out);
   string config_str = neural_net + "_" + type_str + "_" + algo_str;
-  f << neural_net << std::endl;
+  f << config_str << std::endl;
   f << batch_size << std::endl;
   f.close();
 
