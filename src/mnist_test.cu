@@ -275,7 +275,7 @@ int main(int argc, char *argv[]) {
     case 4:
       vDNN_type = vDNN_ALTERNATE_CONV;
       std::cout << "vDNN_ALTERNATE_CONV" << std::endl;
-      type_str = "CONV";
+      type_str = "ALTCONV";
     default:
       break;
   }

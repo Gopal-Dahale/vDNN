@@ -466,9 +466,9 @@ NeuralNet::NeuralNet(std::vector<LayerSpecifier> &layers, DataType data_type,
       auto ws = cur_params->fwd_workspace_size;
       auto filter_ws = cur_params->bwd_filter_workspace_size;
       auto back_ws = cur_params->bwd_data_workspace_size;
-      cur_data_ws = 0;
+      auto cur_data_ws = 0;
       if (i > 0) cur_data_ws = back_ws;
-      cur_ws = (filter_ws > cur_data_ws) ? filter_ws : cur_data_ws;
+      auto cur_ws = (filter_ws > cur_data_ws) ? filter_ws : cur_data_ws;
       f << ws << " " << filter_ws << " " << back_ws << " " << cur_ws << " ";
     } else {
       f << 0 << " " << 0 << " " << 0 << " ";
