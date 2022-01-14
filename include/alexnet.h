@@ -2,6 +2,8 @@
 #define ALEXNET
 #include <vector>
 
+#include "solver.h"
+
 class Alexnet {
  public:
   // VGG NET

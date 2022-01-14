@@ -2,8 +2,6 @@
 #define VGG_16
 #include <vector>
 
-#include "solver.h"
-
 class VGG16 {
  public:
   // VGG NET
