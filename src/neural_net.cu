@@ -1301,58 +1301,59 @@ void NeuralNet::getLoss(void *X, int *y, double learning_rate,
   double Dalpha = 1.0, Dbeta = 0.0;
 
   // // Store layer_sizes in file
-  std::fstream f;
-  f.open("./res/config.txt", std::ios::in);
-  std::string net_name;
-  f >> net_name;
-  int bs;
-  f >> bs;
-  f.close();
-  std::string file_name =
-      "./res/layer_mem_usage_" + net_name + "_" + std::to_string(bs) + ".txt";
-  f.open(file_name, std::ios::out);
-  for (int i = 0; i < num_layers; i++) {
-    f << layer_input_size[i] * data_type_size << " ";
+  // std::fstream f;
+  // f.open("./res/config.txt", std::ios::in);
+  // std::string net_name;
+  // f >> net_name;
+  // int bs;
+  // f >> bs;
+  // f.close();
+  // std::string file_name =
+  //     "./res/layer_mem_usage_" + net_name + "_" + std::to_string(bs) +
+  //     ".txt";
+  // f.open(file_name, std::ios::out);
+  // for (int i = 0; i < num_layers; i++) {
+  //   f << layer_input_size[i] * data_type_size << " ";
 
-    // Workspace size
-    if (layer_type[i] == CONV) {
-      ConvLayerParams *cur_params = (ConvLayerParams *)params[i];
-      auto ws = cur_params->fwd_workspace_size;
-      auto filter_ws = cur_params->bwd_filter_workspace_size;
-      auto back_ws = cur_params->bwd_data_workspace_size;
-      f << ws << " " << filter_ws << " " << back_ws << " ";
-    } else {
-      f << 0 << " " << 0 << " " << 0 << " ";
-    }
+  //   // Workspace size
+  //   if (layer_type[i] == CONV) {
+  //     ConvLayerParams *cur_params = (ConvLayerParams *)params[i];
+  //     auto ws = cur_params->fwd_workspace_size;
+  //     auto filter_ws = cur_params->bwd_filter_workspace_size;
+  //     auto back_ws = cur_params->bwd_data_workspace_size;
+  //     f << ws << " " << filter_ws << " " << back_ws << " ";
+  //   } else {
+  //     f << 0 << " " << 0 << " " << 0 << " ";
+  //   }
 
-    auto wb_size = 0;
+  //   auto wb_size = 0;
 
-    // Weights and biases
-    if (layer_type[i] == CONV) {
-      ConvLayerParams *cur_params = (ConvLayerParams *)params[i];
-      auto weights_size = (cur_params->kernel_size) * data_type_size;
-      auto bias_size = (cur_params->C_out) * data_type_size;
-      wb_size = weights_size + bias_size;
-    } else if (layer_type[i] == FULLY_CONNECTED) {
-      FCLayerParams *cur_params = (FCLayerParams *)params[i];
-      auto weights_size = (cur_params->weight_matrix_size) * data_type_size;
-      auto bias_size = (cur_params->C_out) * data_type_size;
-      wb_size = weights_size + bias_size;
-    } else if (layer_type[i] == DROPOUT) {
-      DropoutLayerParams *cur_params = (DropoutLayerParams *)params[i];
-      auto state_size = (cur_params->state_size);
-      auto reserved_size = (cur_params->reserved_space_size);
-      wb_size = state_size + reserved_size;
-    } else if (layer_type[i] == BATCHNORM) {
-      BatchNormLayerParams *cur_params = (BatchNormLayerParams *)params[i];
-      auto allocation_size_bytes =
-          (cur_params->allocation_size) * data_type_size;
-      wb_size = allocation_size_bytes * 6;
-    }
+  //   // Weights and biases
+  //   if (layer_type[i] == CONV) {
+  //     ConvLayerParams *cur_params = (ConvLayerParams *)params[i];
+  //     auto weights_size = (cur_params->kernel_size) * data_type_size;
+  //     auto bias_size = (cur_params->C_out) * data_type_size;
+  //     wb_size = weights_size + bias_size;
+  //   } else if (layer_type[i] == FULLY_CONNECTED) {
+  //     FCLayerParams *cur_params = (FCLayerParams *)params[i];
+  //     auto weights_size = (cur_params->weight_matrix_size) * data_type_size;
+  //     auto bias_size = (cur_params->C_out) * data_type_size;
+  //     wb_size = weights_size + bias_size;
+  //   } else if (layer_type[i] == DROPOUT) {
+  //     DropoutLayerParams *cur_params = (DropoutLayerParams *)params[i];
+  //     auto state_size = (cur_params->state_size);
+  //     auto reserved_size = (cur_params->reserved_space_size);
+  //     wb_size = state_size + reserved_size;
+  //   } else if (layer_type[i] == BATCHNORM) {
+  //     BatchNormLayerParams *cur_params = (BatchNormLayerParams *)params[i];
+  //     auto allocation_size_bytes =
+  //         (cur_params->allocation_size) * data_type_size;
+  //     wb_size = allocation_size_bytes * 6;
+  //   }
 
-    f << wb_size << std::endl;
-  }
-  f.close();
+  //   f << wb_size << std::endl;
+  // }
+  // f.close();
 
   cudaEvent_t overhead_start, overhead_stop;
   cudaEventCreate(&overhead_start);
@@ -1683,8 +1684,10 @@ void NeuralNet::getLoss(void *X, int *y, double learning_rate,
         cur_data_workspace_size = cur_params->bwd_data_workspace_size;
       else
         cur_data_workspace_size = 0;
-      // std::cout << "bwd cur_workspace_size: " << cur_workspace_size <<
-      // std::endl;
+      std::cout << "bwd_filter_workspace_size: "
+                << cur_params->bwd_filter_workspace_size << std::endl;
+      std::cout << "bwd_data_workspace_size: "
+                << cur_params->bwd_data_workspace_size << std::endl;
       cur_workspace_size = (cur_filter_workspace_size > cur_data_workspace_size)
                                ? cur_filter_workspace_size
                                : cur_data_workspace_size;
