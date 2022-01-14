@@ -250,40 +250,49 @@ int main(int argc, char *argv[]) {
 
   auto vDNN_type = vDNN_ALL;
   int type = result["type"].as<int>();
+  string type_str = "";
   switch (type) {
     case 0:
       vDNN_type = vDNN_ALL;
       std::cout << "vDNN_ALL" << std::endl;
+      type_str = "ALL";
       break;
     case 1:
       vDNN_type = vDNN_CONV;
       std::cout << "vDNN_CONV" << std::endl;
+      type_str = "CONV";
       break;
     case 2:
       vDNN_type = vDNN_NONE;
       std::cout << "vDNN_NONE" << std::endl;
+      type_str = "NONE";
       break;
     case 3:
       vDNN_type = vDNN_DYN;
       std::cout << "vDNN_DYN" << std::endl;
+      type_str = "DYN";
       break;
     case 4:
       vDNN_type = vDNN_ALTERNATE_CONV;
       std::cout << "vDNN_ALTERNATE_CONV" << std::endl;
+      type_str = "CONV";
     default:
       break;
   }
 
   auto vDNN_algo = vDNN_PERFORMANCE_OPTIMAL;
   int algo = result["algo"].as<int>();
+  string algo_str = "";
   switch (algo) {
     case 0:
       vDNN_algo = vDNN_PERFORMANCE_OPTIMAL;
       std::cout << "vDNN_PERFORMANCE_OPTIMAL" << std::endl;
+      algo_str = "PERFOPT";
       break;
     case 1:
       vDNN_algo = vDNN_MEMORY_OPTIMAL;
       std::cout << "vDNN_MEMORY_OPTIMAL" << std::endl;
+      algo_str = "MEMOPT";
       break;
     default:
       break;
@@ -378,12 +387,13 @@ int main(int argc, char *argv[]) {
       {"num_test", num_test}};
 
   for (auto &config : configs) {
-    cout << config.first << ": " << config.second << endl;
+    std::cout << config.first << ": " << config.second << endl;
   }
 
   /************** Write network and batch size to file *******************/
   std::fstream f;
   f.open("./res/config.txt", std::fstream::out);
+  string config_str = neural_net + "_" + type_str + "_" + algo_str;
   f << neural_net << std::endl;
   f << batch_size << std::endl;
   f.close();
@@ -427,5 +437,5 @@ int main(int argc, char *argv[]) {
 
   int num_correct;
   solver.checkAccuracy(f_train_images, f_train_labels, num_train, &num_correct);
-  cout << num_correct << endl;
+  std::cout << num_correct << endl;
 }
