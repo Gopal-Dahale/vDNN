@@ -607,19 +607,16 @@ bool NeuralNet::simulateNeuralNetworkMemory(vDNNConvAlgoPref algo_pref,
     }
 
     if (layer_type[i] == CONV) {
-      size_t res_bytes = 1024;
-      res_bytes *= 6;
-      size_t free_bytes = space_tracker.free_bytes - res_bytes;
       ConvLayerParams *cur_params = (ConvLayerParams *)params[i];
       size_t cur_filter_workspace_size;
       checkWORKSPACE(cur_params->getWorkspaceSize(
-          free_bytes, ConvLayerParams::BWD_FILTER, algo_pref, hard,
-          cur_filter_workspace_size));
+          space_tracker.free_bytes, ConvLayerParams::BWD_FILTER, algo_pref,
+          hard, cur_filter_workspace_size));
       size_t cur_data_workspace_size = 0;
       if (i > 0)
         checkWORKSPACE(cur_params->getWorkspaceSize(
-            free_bytes, ConvLayerParams::BWD_DATA, algo_pref, hard,
-            cur_data_workspace_size));
+            space_tracker.free_bytes, ConvLayerParams::BWD_DATA, algo_pref,
+            hard, cur_data_workspace_size));
 
       size_t cur_workspace_size =
           (cur_filter_workspace_size > cur_data_workspace_size)
