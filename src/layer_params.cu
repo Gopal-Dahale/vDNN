@@ -317,19 +317,20 @@ workspaceStatus_t ConvLayerParams::getWorkspaceSize(
         }
       } else if (conv_direction == BWD_DATA) {
         std::cout << "BWD_DATA" << std::endl;
+        std::cout << "bwd_data_ret_count " << bwd_data_ret_count << std::endl;
         std::cout << "free bytes " << free_bytes << std::endl;
         for (int i = 0; i < bwd_data_ret_count; i++) {
+          std::cout << "bwd_data_perf[" << i << "].memory "
+                    << bwd_data_perf[i].memory << std::endl;
           if (bwd_data_perf[i].algo == CUDNN_CONVOLUTION_BWD_DATA_ALGO_1)
-            std::cout << "bwd_data_perf[" << i << "].memory "
-                      << bwd_data_perf[i].memory << std::endl;
-          if (bwd_data_perf[i].memory < free_bytes &&
-              bwd_data_perf[i].status == CUDNN_STATUS_SUCCESS) {
-            bwd_data_algo = bwd_data_perf[i].algo;
-            bwd_data_workspace_size = bwd_data_perf[i].memory;
-            workspace_size = bwd_data_workspace_size;
-            return WORKSPACE_STATUS_SUCCESS;
-          } else
-            return WORKSPACE_STATUS_OUT_OF_MEMORY;
+            if (bwd_data_perf[i].memory < free_bytes &&
+                bwd_data_perf[i].status == CUDNN_STATUS_SUCCESS) {
+              bwd_data_algo = bwd_data_perf[i].algo;
+              bwd_data_workspace_size = bwd_data_perf[i].memory;
+              workspace_size = bwd_data_workspace_size;
+              return WORKSPACE_STATUS_SUCCESS;
+            } else
+              return WORKSPACE_STATUS_OUT_OF_MEMORY;
         }
       }
     }
