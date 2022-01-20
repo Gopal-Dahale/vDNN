@@ -607,7 +607,8 @@ bool NeuralNet::simulateNeuralNetworkMemory(vDNNConvAlgoPref algo_pref,
     }
 
     if (layer_type[i] == CONV) {
-      size_t res_bytes = 1024 * 1024 * 1024 * 2;
+      size_t res_bytes = 1024;
+      res_bytes *= 6;
       size_t free_bytes = space_tracker.free_bytes - res_bytes;
       ConvLayerParams *cur_params = (ConvLayerParams *)params[i];
       size_t cur_filter_workspace_size;
