@@ -425,7 +425,7 @@ NeuralNet::NeuralNet(std::vector<LayerSpecifier> &layers, DataType data_type,
   for (int i = 0; i < num_layers; i++) {
     // allocate pinned memory in host
     if (to_offload[i])
-      cudaMallocHost(&h_layer_input[i], layer_input_size[i] * data_type_size);
+      cudaMalloc(&h_layer_input[i], layer_input_size[i] * data_type_size);
   }
   // ---------------------- vDNN end ------------------------
   cudaDeviceSynchronize();

@@ -93,18 +93,16 @@ void ConvLayerParams::initializeValues(
       cudnn_handle, filter_desc, output_tensor, conv_desc, input_tensor,
       bwd_data_req_count, &bwd_data_ret_count, bwd_data_perf));
 
-  std::cout << "Printing bwddata conv algo perf\n";
-  for (int i = 0; i < bwd_data_ret_count; i++) {
-    std::cout << i << std::endl;
-    std::cout << "algo: " << bwd_data_perf[i].algo << std::endl;
-    std::cout << "status: " << cudnnGetErrorString(bwd_data_perf[i].status)
-              << std::endl;
-    std::cout << "time(ms): " << bwd_data_perf[i].time << std::endl;
-    std::cout << "memory(MB): " << bwd_data_perf[i].memory * 1.0 / 1024 / 1024
-              << std::endl;
-    std::cout << "mathType: " << bwd_data_perf[i].mathType << std::endl;
-    std::cout << std::endl;
-  }
+  // std::cout << "Printing bwddata conv algo perf\n";
+  // for (int i = 0; i < bwd_data_ret_count; i++) {
+  // 	std::cout << i << std::endl;
+  // 	std::cout << "algo: " << bwd_data_perf[i].algo << std::endl;
+  // 	std::cout << "status: " << cudnnGetErrorString(bwd_data_perf[i].status)
+  // << std::endl; 	std::cout << "time(ms): " << bwd_data_perf[i].time <<
+  // std::endl; 	std::cout << "memory(MB): " << bwd_data_perf[i].memory
+  // * 1.0 / 1024 / 1024 << std::endl; 	std::cout << "mathType: " <<
+  // bwd_data_perf[i].mathType << std::endl; 	std::cout << std::endl;
+  // }
 
   this->update_rule = update_rule;
 
